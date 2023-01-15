@@ -7,10 +7,7 @@ import (
 )
 
 func TestDraw(t *testing.T) {
-	path := "D2Coding.ttf"
-	d, err := NewDrawer(Params{
-		FontPath: path,
-	})
+	d, err := NewDrawer(Params{})
 	if err != nil {
 		t.Fatal(err.Error())
 	}

@@ -1,6 +1,7 @@
 package text2img
 
 import (
+	_ "embed"
 	"errors"
 	"image"
 	"image/color"
@@ -14,6 +15,9 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 )
+
+//go:embed D2Coding.ttf
+var defaultFont []byte
 
 // Default values
 const (
@@ -52,6 +56,8 @@ func NewDrawer(params Params) (Drawer, error) {
 		if err != nil {
 			return d, err
 		}
+	} else {
+		d.setDefaultFont()
 	}
 	if params.BackgroundImagePath != "" {
 		err := d.SetBackgroundImage(params.BackgroundImagePath)
@@ -154,6 +160,15 @@ func (d *drawer) SetFontPath(fontPath string) (err error) {
 		return
 	}
 	f, err := freetype.ParseFont(fontBytes)
+	if err != nil {
+		return
+	}
+	d.Font = f
+	return
+}
+
+func (d *drawer) setDefaultFont() {
+	f, err := freetype.ParseFont(defaultFont)
 	if err != nil {
 		return
 	}
