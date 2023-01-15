@@ -7,13 +7,18 @@ import (
 	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
 	"os"
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
+)
+
+// Default values
+const (
+	defaultWidth  = 800
+	defaultHeight = 600
 )
 
 // Drawer is the main interface for this package
@@ -81,12 +86,12 @@ type drawer struct {
 // Draw returns the image of a text
 func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
 	if d.BackgroundImage != nil {
-		imgRect := image.Rectangle{image.Pt(0, 0), d.BackgroundImage.Bounds().Size()}
+		imgRect := image.Rectangle{Min: image.Pt(0, 0), Max: d.BackgroundImage.Bounds().Size()}
 		img = image.NewRGBA(imgRect)
-		draw.Draw(img, img.Bounds(), d.BackgroundImage, image.ZP, draw.Src)
+		draw.Draw(img, img.Bounds(), d.BackgroundImage, image.Point{}, draw.Src)
 	} else {
 		img = image.NewRGBA(image.Rect(0, 0, d.Width, d.Height))
-		draw.Draw(img, img.Bounds(), d.BackgroundColor, image.ZP, draw.Src)
+		draw.Draw(img, img.Bounds(), d.BackgroundColor, image.Point{}, draw.Src)
 	}
 	if d.autoFontSize {
 		d.FontSize = d.calcFontSize(text)
@@ -108,15 +113,7 @@ func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
 		_, err = c.DrawString(text, pt)
 		return
 	}
-	err = errors.New("Font must be specified")
-	// point := fixed.Point26_6{640, 960}
-	// fd := &font.Drawer{
-	// 	Dst:  img,
-	// 	Src:  d.TextColor,
-	// 	Face: basicfont.Face7x13,
-	// 	Dot:  point,
-	// }
-	// fd.DrawString(text)
+	err = errors.New("font must be specified")
 	return
 }
 
@@ -141,18 +138,18 @@ func (d *drawer) SetColors(textColor, backgroundColor color.RGBA) {
 	r1, g1, b1, a1 := backgroundColor.RGBA()
 	r2, g2, b2, a2 := textColor.RGBA()
 	if r1 == r2 && g1 == g2 && b1 == b2 && a1 == a2 {
-		color := PickColor()
-		d.TextColor = image.NewUniform(color.TextColor)
-		d.BackgroundColor = image.NewUniform(color.BackgroundColor)
+		pickedColor := PickColor()
+		d.TextColor = image.NewUniform(pickedColor.TextColor)
+		d.BackgroundColor = image.NewUniform(pickedColor.BackgroundColor)
 		return
 	}
 	d.TextColor = image.NewUniform(textColor)
 	d.BackgroundColor = image.NewUniform(backgroundColor)
 }
 
-// SetColors sets the font
+// SetFontPath sets the font
 func (d *drawer) SetFontPath(fontPath string) (err error) {
-	fontBytes, err := ioutil.ReadFile(fontPath)
+	fontBytes, err := os.ReadFile(fontPath)
 	if err != nil {
 		return
 	}
@@ -164,7 +161,7 @@ func (d *drawer) SetFontPath(fontPath string) (err error) {
 	return
 }
 
-// SetColors sets the fontSize
+// SetFontSize sets the fontSize
 func (d *drawer) SetFontSize(fontSize float64) {
 	if fontSize > 0 {
 		d.autoFontSize = false
@@ -174,21 +171,21 @@ func (d *drawer) SetFontSize(fontSize float64) {
 	d.autoFontSize = true
 }
 
-// SetFontPos sets the fontPos
+// SetTextPos sets the fontPos
 func (d *drawer) SetTextPos(textPosVertical, textPosHorizontal int) {
 	d.TextPosVertical = textPosVertical
 	d.TextPosHorizontal = textPosHorizontal
 }
 
-// SetColors sets the size
+// SetSize sets the size
 func (d *drawer) SetSize(width, height int) {
 	if width <= 0 {
-		d.Width = 1200
+		d.Width = defaultWidth
 	} else {
 		d.Width = width
 	}
 	if height <= 0 {
-		d.Height = 630
+		d.Height = defaultHeight
 	} else {
 		d.Height = height
 	}
@@ -216,7 +213,7 @@ func (d *drawer) calcTextWidth(fontSize float64, text string) (textWidth int) {
 		face = basicfont.Face7x13
 	}
 	for _, x := range text {
-		awidth, ok := face.GlyphAdvance(rune(x))
+		awidth, ok := face.GlyphAdvance(x)
 		if ok != true {
 			return
 		}

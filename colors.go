@@ -1,9 +1,9 @@
 package text2img
 
 import (
+	"crypto/rand"
 	"image/color"
-	"math/rand"
-	"time"
+	"math/big"
 )
 
 // Color contains a good conbination of backgroundColor and textColor
@@ -15,7 +15,6 @@ type Color struct {
 var colors []Color
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
 	g333 := must(Hex("#333"))
 	fff := must(Hex("#fff"))
 	colors = []Color{
@@ -83,5 +82,7 @@ func init() {
 
 // PickColor picks a color
 func PickColor() Color {
-	return colors[rand.Intn(len(colors))]
+	//return colors[rand.Intn(len(colors))]
+	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(colors))))
+	return colors[r.Int64()]
 }

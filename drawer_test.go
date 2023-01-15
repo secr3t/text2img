@@ -1,13 +1,13 @@
 package text2img
 
 import (
-	"image/jpeg"
+	"image/png"
 	"os"
 	"testing"
 )
 
 func TestDraw(t *testing.T) {
-	path := "fonts/mplus-1c-bold.ttf"
+	path := "D2Coding.ttf"
 	d, err := NewDrawer(Params{
 		FontPath: path,
 	})
@@ -15,16 +15,16 @@ func TestDraw(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	img, err := d.Draw("text2img generates the image from a text")
+	img, err := d.Draw("랜덤 이미지 생성 테스트")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	file, err := os.Create("test.jpg")
+	file, err := os.Create("test.png")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 	defer file.Close()
-	if err = jpeg.Encode(file, img, &jpeg.Options{Quality: 100}); err != nil {
+	if err = png.Encode(file, img); err != nil {
 		t.Fatal(err.Error())
 	}
 }
