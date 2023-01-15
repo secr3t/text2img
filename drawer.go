@@ -33,6 +33,7 @@ type Drawer interface {
 	SetFontSize(float64)
 	SetTextPos(int, int)
 	SetSize(int, int)
+	SetRandom(bool)
 }
 
 // Params is parameters for NewDrawer function
@@ -46,6 +47,7 @@ type Params struct {
 	TextColor           color.RGBA
 	TextPosVertical     int
 	TextPosHorizontal   int
+	Random              bool
 }
 
 // NewDrawer returns Drawer interface
@@ -85,8 +87,13 @@ type drawer struct {
 	TextPosVertical   int
 	TextPosHorizontal int
 	Width             int
+	Random            bool
 
 	autoFontSize bool
+}
+
+func (d *drawer) SetRandom(b bool) {
+	d.Random = b
 }
 
 // Draw returns the image of a text
@@ -96,6 +103,7 @@ func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
 		img = image.NewRGBA(imgRect)
 		draw.Draw(img, img.Bounds(), d.BackgroundImage, image.Point{}, draw.Src)
 	} else {
+		d.setRandomColor()
 		img = image.NewRGBA(image.Rect(0, 0, d.Width, d.Height))
 		draw.Draw(img, img.Bounds(), d.BackgroundColor, image.Point{}, draw.Src)
 	}
@@ -123,6 +131,12 @@ func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
 	return
 }
 
+func (d *drawer) setRandomColor() {
+	pickedColor := PickColor()
+	d.TextColor = image.NewUniform(pickedColor.TextColor)
+	d.BackgroundColor = image.NewUniform(pickedColor.BackgroundColor)
+}
+
 // SetBackgroundImage sets the specific background image
 func (d *drawer) SetBackgroundImage(imagePath string) (err error) {
 	src, err := os.Open(imagePath)
@@ -144,9 +158,7 @@ func (d *drawer) SetColors(textColor, backgroundColor color.RGBA) {
 	r1, g1, b1, a1 := backgroundColor.RGBA()
 	r2, g2, b2, a2 := textColor.RGBA()
 	if r1 == r2 && g1 == g2 && b1 == b2 && a1 == a2 {
-		pickedColor := PickColor()
-		d.TextColor = image.NewUniform(pickedColor.TextColor)
-		d.BackgroundColor = image.NewUniform(pickedColor.BackgroundColor)
+		d.setRandomColor()
 		return
 	}
 	d.TextColor = image.NewUniform(textColor)
